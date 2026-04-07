@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>NFC Cloud Master Pro</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        
+        /* LOGIN SCHERM - EXTRA VEILIG VOOR KLIKKEN */
+        #login-screen { 
+            position: fixed; inset: 0; background: #1a73e8; 
+            display: flex; justify-content: center; align-items: center; 
+            z-index: 9999; transition: 0.3s;
+        }
+        .login-card { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .hidden { display: none !important; pointer-events: none; }
+
+        /* DASHBOARD LAYOUT */
+        #dashboard { display: none; flex-direction: row; width: 100%; height: 100vh; }
+        .sidebar { width: 240px; background: #202124; color: white; padding: 20px; display: flex; flex-direction: column; }
+        .sidebar button { 
+            background: none; border: none; color: #9aa0a6; padding: 15px; 
+            width: 100%; text-align: left; cursor: pointer; border-radius: 8px; 
+            margin-bottom: 5px; font-size: 1em;
+        }
+        .sidebar button.active { background: #1a73e8; color: white; }
+        .sidebar button:hover { background: #3c4043; }
+
+        .content { flex: 1; padding: 30px; overflow-y: auto; background: #f0f2f5; }
+        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        input { padding: 12px; border-radius: 8px; border: 1px solid #ccc; width: 90%; margin: 10px 0; font-size: 1em; }
+        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 1em; }
+        .btn-primary { background: #1a73e8; color: white; }
+        .btn-success { background: #34a853; color: white; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9em; }
+        th { background: #f8f9fa; color: #666; }
+    </style>
+</head>
+<body>
+
+    <!-- 1. LOGIN SCHERM -->
+    <div id="login-screen">
+        <div class="login-card">
+            <h2 id="log-title" style="color: #1a73e8; margin-top: 0;">NFC Master Login</h2>
+            <input type="email" id="email-in" placeholder="Email">
+            <input type="password" id="pass-in" placeholder="Wachtwoord">
+            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="authAction()" id="main-btn">INLOGGEN</button>
+            <p id="toggle-text" style="margin-top: 15px; font-size: 0.8em; color: #666; cursor: pointer;" onclick="toggleAuthMode()">
+                Nog geen account? Registreer hier.
+            </p>
+        </div>
+    </div>
+
+    <!-- 2. DASHBOARD -->
+    <div id="dashboard">
+        <div class="sidebar">
+            <h2 style="color: #1a73e8; margin-bottom: 30px;">NFC MASTER</h2>
+            <button id="btn-scan" class="active" onclick="showTab('scan')">📲 Scanner</button>
+            <button id="btn-db" onclick="showTab('db')">📊 Mijn Geschiedenis</button>
+            <button id="btn-settings" onclick="showTab('settings')">⚙️ Instellingen</button>
+            <div style="flex: 1;"></div>
+            <button onclick="location.reload()" style="color: #ea4335; border-top: 1px solid #3c4043;">Uitloggen</button>
+        </div>
+
+        <div class="content">
+            <!-- TAB: SCANNER -->
+            <div id="tab-scan" class="tab-content active">
+                <div class="card" style="display: flex; gap: 30px; align-items: center;">
+                    <canvas id="qrcode"></canvas>
+                    <div style="flex: 1;">
+                        <h2>Live Controle</h2>
+                        <p>Huidig kanaal: <b id="display-channel">Geen</b></p>
+                        <button class="btn btn-primary" onclick="stuurVerzoek('SCAN')">📲 STUUR SCAN VERZOEK</button>
+                        <div style="margin-top: 20px;">
+                            <input type="text" id="write-text" placeholder="Tekst voor op de kaart..." style="width: 70%;">
+                            <button class="btn btn-success" onclick="stuurVerzoek('WRITE')">✍️ SCHRIJF DATA</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Laatste Scan Resultaat:</h3>
+                    <pre id="raw-data" style="background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #ddd; word-break: break-all; min-height: 40px;">Wachten op scan...</pre>
+                </div>
+            </div>
+
+            <!-- TAB: DATABASE -->
+            <div id="tab-db" class="tab-content">
+                <div class="card">
+                    <h2>Mijn Persoonlijke Geschiedenis</h2>
+                    <table>
+                        <thead><tr><th>Tijdstip</th><th>Naam</th><th>Data</th></tr></thead>
+                        <tbody id="db-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB: INSTELLINGEN -->
+            <div id="tab-settings" class="tab-content">
+                <div class="card">
+                    <h2>Configuratie</h2>
+                    <p>Stel hier je persoonlijke ntfy-kanaal in (gebruik ditzelfde kanaal op je GSM):</p>
+                    <input type="text" id="ntfy-input" placeholder="bijv. navaro_scanner_99">
+                    <br>
+                    <button class="btn btn-primary" onclick="saveSettings()">KANAAL OPSLAAN</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const { createClient } = require('@supabase/supabase-js');
+        const QRCode = require('qrcode');
+
+        // SUPABASE CONFIG
+        const SUPABASE_URL = 'https://eddnqlqwfzowbjffiugs.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_9mZpcTIXUw-WTR_QxTi4XQ_WsdwUSqs'; 
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let isLoginMode = true;
+        let ntfySource = null;
+
+        // 1. AUTH LOGICA
+        function toggleAuthMode() {
+            isLoginMode = !isLoginMode;
+            document.getElementById('log-title').innerText = isLoginMode ? "NFC Master Login" : "NFC Master Registratie";
+            document.getElementById('main-btn').innerText = isLoginMode ? "INLOGGEN" : "REGISTREREN";
+            document.getElementById('toggle-text').innerText = isLoginMode ? "Nog geen account? Registreer hier." : "Al een account? Log hier in.";
+        }
+
+        async function authAction() {
+            const email = document.getElementById('email-in').value;
+            const password = document.getElementById('pass-in').value;
+            
+            if (isLoginMode) {
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) alert("Fout: " + error.message);
+                else loginSuccess();
+            } else {
+                const { data, error } = await supabase.auth.signUp({ email, password });
+                if (error) alert("Fout: " + error.message);
+                else alert("Registratie gelukt! Je kunt nu inloggen.");
+            }
+        }
+
+        function loginSuccess() {
+    		// 1. Haal het inlogscherm op
+    		const loginScreen = document.getElementById('login-screen');
+    
+    		// 2. Knal het volledig weg (niet alleen onzichtbaar, maar echt weg)
+    		loginScreen.style.display = 'none';
+    		loginScreen.style.pointerEvents = 'none'; // Zorgt dat je er 'doorheen' kunt klikken
+    
+    		// 3. Toon het dashboard en forceer dat het de bovenste laag wordt
+    		const dashboard = document.getElementById('dashboard');
+    		dashboard.style.display = 'flex';
+    		dashboard.style.position = 'relative';
+    		dashboard.style.zIndex = '1';
+    
+    		// 4. Start de rest
+    		loadSettings();
+    		loadHistory();
+	}
+
+
+        // 2. TAB & SETTINGS LOGICA
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            document.getElementById('btn-' + tabId).classList.add('active');
+        }
+
+        function saveSettings() {
+            const chan = document.getElementById('ntfy-input').value;
+            if (!chan) return alert("Vul een kanaalnaam in!");
+            localStorage.setItem('navaro_chan', chan);
+            alert("Kanaal opgeslagen!");
+            initNtfy(chan);
+        }
+
+        function loadSettings() {
+            const chan = localStorage.getItem('navaro_chan') || "navaro_default";
+            document.getElementById('ntfy-input').value = chan;
+            initNtfy(chan);
+        }
+
+        // 3. NTFY & SCAN LOGICA
+        function initNtfy(channel) {
+            if (ntfySource) ntfySource.close();
+            document.getElementById('display-channel').innerText = channel;
+            
+            // QR Code maken voor de GSM
+            QRCode.toCanvas(document.getElementById('qrcode'), "https://friendly-pixie-81e3aa.netlify.app", { width: 150 });
+
+            ntfySource = new EventSource(`https://ntfy.sh/${channel}/sse`);
+            ntfySource.onmessage = async (e) => {
+                const data = JSON.parse(e.data);
+                if (data.message) {
+                    document.getElementById('raw-data').innerText = data.message;
+                    
+                    let name = "NFC Record";
+                    try { name = JSON.parse(data.message).display_name || "NFC Scan"; } catch(err) {}
+
+                    // Opslaan in Supabase (automatisch gekoppeld aan jouw user_id door de SQL regel)
+                    await supabase.from('history').insert([{ display_name: name, raw_data: data.message }]);
+                    loadHistory();
+                }
+            };
+        }
+
+        async function stuurVerzoek(type) {
+            const chan = localStorage.getItem('navaro_chan') || "navaro_default";
+            const content = document.getElementById('write-text').value;
+            await fetch(`https://ntfy.sh/${chan}_request`, {
+                method: 'POST',
+                body: JSON.stringify({ type, content })
+            });
+            alert("Verzoek verstuurd naar GSM!");
+        }
+
+        // 4. DATABASE WEERGAVE
+        async function loadHistory() {
+            const { data, error } = await supabase.from('history').select('*').order('created_at', { ascending: false });
+            if (data) {
+                document.getElementById('db-body').innerHTML = data.map(h => `
+                    <tr>
+                        <td>${new Date(h.created_at).toLocaleString()}</td>
+                        <td><b>${h.display_name}</b></td>
+                        <td style="color: #666; font-size: 0.8em;">${h.raw_data.substring(0, 50)}...</td>
+                    </tr>
+                `).join('');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,6 +1,6 @@
 {
   "name": "nfc-desktop-app",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "NFC Cloud Dashboard Pro",
   "main": "main.js",
   "scripts": {

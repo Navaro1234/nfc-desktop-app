@@ -5,7 +5,7 @@ const axios = require('axios'); // Installeer eerst: npm install axios
 let mainWindow;
 const CURRENT_VERSION = app.getVersion();
 const apiurl = "https://api.github.com/repos/navaro1234/nfc-desktop-app/releases/latest";
-const weburl = "https://github.com/repos/navaro1234/nfc-desktop-app/releases/latest";
+const weburl = "https://github.com/navaro1234/nfc-desktop-app/releases/latest";
 
 async function checkUpdates() {
     try {

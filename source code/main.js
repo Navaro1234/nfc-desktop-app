@@ -4,11 +4,12 @@ const axios = require('axios'); // Installeer eerst: npm install axios
 
 let mainWindow;
 const CURRENT_VERSION = app.getVersion();
-const REPO = "Navaro1234/nfc-master-system";
+const apiurl = "https://api.github.com/repos/navaro1234/nfc-desktop-app/releases/latest";
+const weburl = "https://github.com/repos/navaro1234/nfc-desktop-app/releases/latest";
 
 async function checkUpdates() {
     try {
-        const res = await axios.get(`https://github.com/{REPO}/releases/latest`);
+        const res = await axios.get(apiurl);
         const latestVersion = res.data.tag_name.replace('v', '');
 
         if (latestVersion !== CURRENT_VERSION) {
@@ -19,7 +20,7 @@ async function checkUpdates() {
                 message: `Er is een nieuwe versie (${latestVersion}) beschikbaar. Wil je naar de downloadpagina?`
             });
             if (response === 0) {
-                shell.openExternal(`https://github.com/{REPO}/releases/latest`);
+                shell.openExternal(weburl);
             }
         }
     } catch (err) {
@@ -31,6 +32,7 @@ function createWindow() {
     mainWindow = new BrowserWindow({
         width: 950,
         height: 750,
+	icon: path.join(__dirname, 'icon.ico'),
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false

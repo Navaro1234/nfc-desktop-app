@@ -1,38 +1,34 @@
 {
-  "name": "nfc-master-system",
-  "version": "1.0.0",
-  "description": "NFC Cloud Dashboard met Auto-Update",
+  "name": "nfc-desktop-app",
+  "version": "1.0.1",
+  "description": "NFC Cloud Dashboard Pro",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
     "dist": "electron-builder"
   },
   "author": "Navaro",
-  "license": "ISC",
   "dependencies": {
-    "@supabase/supabase-js": "^2.101.1",
+    "@supabase/supabase-js": "^2.39.0",
     "axios": "^1.6.0",
-    "express": "^5.2.1",
-    "qrcode": "^1.5.4"
+    "qrcode": "^1.5.3"
   },
   "devDependencies": {
     "electron": "^41.1.1",
     "electron-builder": "^24.13.3"
   },
   "build": {
-    "appId": "com.navaro.nfccloud",
+    "appId": "com.navaro.nfcpro",
     "productName": "NFC Master System",
-    "directories": {
-      "output": "dist"
-    },
     "win": {
-      "target": "nsis"
+      "target": "nsis",
+      "icon": "icon.ico"
     },
     "publish": [
       {
         "provider": "github",
-        "owner": "Navaro1234",
-        "repo": "nfc-master-system"
+        "owner": "navaro1234",
+        "repo": "nfc-desktop-app"
       }
     ]
   }

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFC Remote Pro</title>
+</head>
+<body style="text-align:center; font-family:sans-serif; background:#1a73e8; color:white; padding:20px;">
+    <h2>📲 NFC Remote Pro</h2>
+    <div id="setup">
+        <p>Typ je ntfy kanaal:</p>
+        <input type="text" id="chan-input" style="padding:15px; width:80%; border-radius:10px; border:none;">
+        <br><br>
+        <button onclick="connect()" style="padding:15px; background:white; color:#1a73e8; border:none; border-radius:10px; font-weight:bold;">VERBINDEN</button>
+    </div>
+    <div id="active-screen" style="display:none;">
+        <p>Kanaal: <b id="chan-name"></b></p>
+        <div id="status" style="background:rgba(0,0,0,0.2); padding:20px; border-radius:15px;">Wachten op laptop...</div>
+    </div>
+
+    <script>
+        function connect() {
+            const chan = document.getElementById('chan-input').value;
+            if (!chan) return alert("Typ kanaal!");
+            document.getElementById('setup').style.display = 'none';
+            document.getElementById('active-screen').style.display = 'block';
+            document.getElementById('chan-name').innerText = chan;
+
+            const requestSource = new EventSource(`https://ntfy.sh/${chan}_request/sse`);
+            requestSource.onmessage = async (e) => {
+                const data = JSON.parse(e.data);
+                if (!data.message) return;
+                const req = JSON.parse(data.message);
+                const ndef = new NDEFReader();
+
+                if (req.type === 'SCAN') {
+                    document.getElementById('status').innerText = "Houd kaart bij telefoon...";
+                    await ndef.scan();
+                    ndef.onreading = (event) => {
+                        const decoder = new TextDecoder();
+                        let res = "";
+                        for (const r of event.message.records) { res += decoder.decode(r.data); }
+                        fetch(`https://ntfy.sh/${chan}`, { method: 'POST', body: res });
+                        document.getElementById('status').innerText = "✅ Verzonden!";
+                    };
+                }
+                if (req.type === 'WRITE') {
+                    document.getElementById('status').innerText = "Schrijven: " + req.content;
+                    try {
+                        await ndef.write(req.content);
+                        fetch(`https://ntfy.sh/${chan}`, { method: 'POST', body: "✅ Gelukt: " + req.content });
+                    } catch(err) { alert(err); }
+                }
+            };
+        }
+    </script>
+</body>
+</html>

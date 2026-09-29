@@ -1,0 +1,13 @@
+{
+  "id": "email",
+  "name": "Email Addon",
+  "version": "1.0.0",
+  "description": "Maak een e-mail vanuit NFC-data.",
+  "icon": "📧",
+  "entry": "view.html",
+  "settings": {
+    "recipient": "",
+    "subject": "NFC Master - NFC data",
+    "bodyPrefix": "NFC scan ontvangen:\n\n"
+  }
+}

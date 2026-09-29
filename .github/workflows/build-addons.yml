@@ -1,0 +1,51 @@
+name: Build NFC Master addons
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'addons/EmailAddon/**'
+      - 'addons/DiscordAddon/**'
+      - '.github/workflows/build-addons.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build addon packages
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          from zipfile import ZipFile, ZIP_DEFLATED
+
+          for name in ('EmailAddon', 'DiscordAddon'):
+              root = Path('addons') / name
+              output = Path('addons') / f'{name}.ndnfcaddon'
+              with ZipFile(output, 'w', ZIP_DEFLATED) as z:
+                  for path in sorted(root.rglob('*')):
+                      if path.is_file():
+                          z.write(path, path.relative_to('addons'))
+          PY
+
+      - name: Commit generated addon packages
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add addons/EmailAddon.ndnfcaddon addons/DiscordAddon.ndnfcaddon
+          if git diff --cached --quiet; then
+            echo 'No addon package changes.'
+            exit 0
+          fi
+          git commit -m 'Build Email and Discord addon packages'
+          git push

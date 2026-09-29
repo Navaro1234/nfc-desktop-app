@@ -8,3 +8,5 @@ NFC Master addon for preparing an email from NFC data.
 - No email password or SMTP credentials are stored in the addon.
 
 The addon package is built from this source folder into `EmailAddon.ndnfcaddon` by the repository addon build workflow.
+
+Build trigger: Email Addon 1.0.0

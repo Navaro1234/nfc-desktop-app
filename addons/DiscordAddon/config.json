@@ -1,0 +1,13 @@
+{
+  "id": "discord",
+  "name": "Discord Addon",
+  "version": "1.0.0",
+  "description": "Stuur NFC-data naar Discord via een webhook.",
+  "icon": "💬",
+  "entry": "view.html",
+  "settings": {
+    "webhookUrl": "",
+    "username": "NFC Master",
+    "contentPrefix": "📡 NFC scan ontvangen:"
+  }
+}

@@ -1,241 +1,129 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta charset="UTF-8">
     <title>NFC Cloud Master Pro</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; display: flex; height: 100vh; overflow: hidden; }
-        
-        /* LOGIN SCHERM - EXTRA VEILIG VOOR KLIKKEN */
-        #login-screen { 
-            position: fixed; inset: 0; background: #1a73e8; 
-            display: flex; justify-content: center; align-items: center; 
-            z-index: 9999; transition: 0.3s;
-        }
-        .login-card { background: white; padding: 30px; border-radius: 20px; text-align: center; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
-        .hidden { display: none !important; pointer-events: none; }
-
-        /* DASHBOARD LAYOUT */
-        #dashboard { display: none; flex-direction: row; width: 100%; height: 100vh; }
-        .sidebar { width: 240px; background: #202124; color: white; padding: 20px; display: flex; flex-direction: column; }
-        .sidebar button { 
-            background: none; border: none; color: #9aa0a6; padding: 15px; 
-            width: 100%; text-align: left; cursor: pointer; border-radius: 8px; 
-            margin-bottom: 5px; font-size: 1em;
-        }
-        .sidebar button.active { background: #1a73e8; color: white; }
-        .sidebar button:hover { background: #3c4043; }
-
-        .content { flex: 1; padding: 30px; overflow-y: auto; background: #f0f2f5; }
-        .card { background: white; padding: 25px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        
-        input { padding: 12px; border-radius: 8px; border: 1px solid #ccc; width: 90%; margin: 10px 0; font-size: 1em; }
-        .btn { padding: 12px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; font-size: 1em; }
-        .btn-primary { background: #1a73e8; color: white; }
-        .btn-success { background: #34a853; color: white; }
-
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { text-align: left; padding: 12px; border-bottom: 1px solid #eee; font-size: 0.9em; }
-        th { background: #f8f9fa; color: #666; }
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background:#eef1f5; margin:0; display:flex; height:100vh; overflow:hidden; color:#202124; }
+        #login-screen { position:fixed; inset:0; background:#1a73e8; display:flex; justify-content:center; align-items:center; z-index:9999; }
+        .login-card { background:white; padding:30px; border-radius:20px; text-align:center; width:350px; box-shadow:0 10px 30px rgba(0,0,0,.2); }
+        .hidden { display:none !important; }
+        #dashboard { display:none; flex-direction:row; width:100%; height:100vh; }
+        .sidebar { width:250px; min-width:250px; background:#202124; color:white; padding:20px; display:flex; flex-direction:column; }
+        .brand { color:#4285f4; font-size:24px; font-weight:800; margin:4px 0 30px; }
+        .sidebar button { background:none; border:0; color:#b8bdc5; padding:13px 15px; width:100%; text-align:left; cursor:pointer; border-radius:9px; margin-bottom:6px; font-size:15px; }
+        .sidebar button.active { background:#1a73e8; color:white; }
+        .sidebar button:hover { background:#3c4043; color:white; }
+        .content { flex:1; padding:30px; overflow-y:auto; background:#eef1f5; }
+        .card { background:white; padding:25px; border-radius:16px; box-shadow:0 4px 14px rgba(0,0,0,.06); margin-bottom:20px; }
+        .tab-content { display:none; } .tab-content.active { display:block; }
+        input, textarea, select { padding:12px; border-radius:9px; border:1px solid #d0d4da; width:100%; margin:7px 0 14px; font-size:1em; font-family:inherit; }
+        textarea { min-height:100px; resize:vertical; }
+        label { display:block; font-size:13px; font-weight:700; color:#5f6368; margin-top:7px; }
+        .btn { padding:11px 18px; border:0; border-radius:9px; cursor:pointer; font-weight:700; transition:.15s; font-size:14px; }
+        .btn:hover { transform:translateY(-1px); filter:brightness(.97); }
+        .btn-primary { background:#1a73e8; color:white; } .btn-success { background:#34a853; color:white; }
+        .btn-danger { background:#ea4335; color:white; } .btn-secondary { background:#e8eaed; color:#202124; }
+        .toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+        .addon-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px; }
+        .addon-card { border:1px solid #e0e3e7; border-radius:15px; padding:20px; background:#fff; }
+        .addon-icon { font-size:34px; } .addon-title { font-size:19px; font-weight:800; margin:7px 0; }
+        .muted { color:#6b7280; font-size:13px; line-height:1.5; }
+        .status { padding:10px 12px; border-radius:9px; background:#f1f3f4; margin-top:10px; font-size:13px; }
+        .status.ok { background:#e6f4ea; color:#137333; } .status.err { background:#fce8e6; color:#c5221f; }
+        .modal { position:fixed; inset:0; background:rgba(0,0,0,.45); display:none; align-items:center; justify-content:center; z-index:5000; }
+        .modal.show { display:flex; }
+        .modal-card { width:min(650px,92vw); max-height:90vh; overflow:auto; background:#fff; border-radius:18px; padding:25px; box-shadow:0 20px 60px rgba(0,0,0,.25); }
+        .modal-head { display:flex; justify-content:space-between; align-items:center; gap:15px; }
+        .close { border:0; background:#eee; border-radius:50%; width:34px; height:34px; cursor:pointer; font-size:18px; }
+        table { width:100%; border-collapse:collapse; margin-top:15px; } th,td { text-align:left; padding:12px; border-bottom:1px solid #eee; font-size:.9em; } th { background:#f8f9fa; color:#666; }
+        .dropzone { border:2px dashed #b7c0cc; border-radius:14px; padding:28px; text-align:center; background:#fafbfc; }
+        .dropzone:hover { border-color:#1a73e8; background:#f6f9ff; }
     </style>
 </head>
 <body>
+<div id="login-screen"><div class="login-card">
+    <h2 id="log-title" style="color:#1a73e8;margin-top:0">NFC Master Login</h2>
+    <input type="email" id="email-in" placeholder="Email"><input type="password" id="pass-in" placeholder="Wachtwoord">
+    <button class="btn btn-primary" style="width:100%;margin-top:5px" onclick="authAction()" id="main-btn">INLOGGEN</button>
+    <p id="toggle-text" style="margin-top:15px;font-size:.8em;color:#666;cursor:pointer" onclick="toggleAuthMode()">Nog geen account? Registreer hier.</p>
+</div></div>
 
-    <!-- 1. LOGIN SCHERM -->
-    <div id="login-screen">
-        <div class="login-card">
-            <h2 id="log-title" style="color: #1a73e8; margin-top: 0;">NFC Master Login</h2>
-            <input type="email" id="email-in" placeholder="Email">
-            <input type="password" id="pass-in" placeholder="Wachtwoord">
-            <button class="btn btn-primary" style="width: 100%; margin-top: 10px;" onclick="authAction()" id="main-btn">INLOGGEN</button>
-            <p id="toggle-text" style="margin-top: 15px; font-size: 0.8em; color: #666; cursor: pointer;" onclick="toggleAuthMode()">
-                Nog geen account? Registreer hier.
-            </p>
-        </div>
+<div id="dashboard">
+    <div class="sidebar">
+        <div class="brand">NFC MASTER</div>
+        <button id="btn-scan" class="active" onclick="showTab('scan')">📲 Scanner</button>
+        <button id="btn-db" onclick="showTab('db')">📊 Mijn Geschiedenis</button>
+        <button id="btn-addons" onclick="showTab('addons')">🧩 Add-ons</button>
+        <button id="btn-settings" onclick="showTab('settings')">⚙️ Instellingen</button>
+        <div style="flex:1"></div>
+        <button onclick="location.reload()" style="color:#ea4335;border-top:1px solid #3c4043">Uitloggen</button>
     </div>
-
-    <!-- 2. DASHBOARD -->
-    <div id="dashboard">
-        <div class="sidebar">
-            <h2 style="color: #1a73e8; margin-bottom: 30px;">NFC MASTER</h2>
-            <button id="btn-scan" class="active" onclick="showTab('scan')">📲 Scanner</button>
-            <button id="btn-db" onclick="showTab('db')">📊 Mijn Geschiedenis</button>
-            <button id="btn-settings" onclick="showTab('settings')">⚙️ Instellingen</button>
-            <div style="flex: 1;"></div>
-            <button onclick="location.reload()" style="color: #ea4335; border-top: 1px solid #3c4043;">Uitloggen</button>
+    <div class="content">
+        <div id="tab-scan" class="tab-content active">
+            <div class="card" style="display:flex;gap:30px;align-items:center">
+                <canvas id="qrcode"></canvas><div style="flex:1"><h2>Live Controle</h2><p>Huidig kanaal: <b id="display-channel">Geen</b></p>
+                <button class="btn btn-primary" onclick="stuurVerzoek('SCAN')">📲 STUUR SCAN VERZOEK</button>
+                <div style="margin-top:20px"><input type="text" id="write-text" placeholder="Tekst voor op de kaart..." style="width:70%;display:inline-block"><button class="btn btn-success" onclick="stuurVerzoek('WRITE')">✍️ SCHRIJF DATA</button></div></div>
+            </div>
+            <div class="card"><h3>Laatste Scan Resultaat:</h3><pre id="raw-data" style="background:#f8f9fa;padding:20px;border-radius:10px;border:1px solid #ddd;word-break:break-all;min-height:40px">Wachten op scan...</pre></div>
         </div>
 
-        <div class="content">
-            <!-- TAB: SCANNER -->
-            <div id="tab-scan" class="tab-content active">
-                <div class="card" style="display: flex; gap: 30px; align-items: center;">
-                    <canvas id="qrcode"></canvas>
-                    <div style="flex: 1;">
-                        <h2>Live Controle</h2>
-                        <p>Huidig kanaal: <b id="display-channel">Geen</b></p>
-                        <button class="btn btn-primary" onclick="stuurVerzoek('SCAN')">📲 STUUR SCAN VERZOEK</button>
-                        <div style="margin-top: 20px;">
-                            <input type="text" id="write-text" placeholder="Tekst voor op de kaart..." style="width: 70%;">
-                            <button class="btn btn-success" onclick="stuurVerzoek('WRITE')">✍️ SCHRIJF DATA</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="card">
-                    <h3>Laatste Scan Resultaat:</h3>
-                    <pre id="raw-data" style="background: #f8f9fa; padding: 20px; border-radius: 10px; border: 1px solid #ddd; word-break: break-all; min-height: 40px;">Wachten op scan...</pre>
-                </div>
-            </div>
+        <div id="tab-db" class="tab-content"><div class="card"><h2>Mijn Persoonlijke Geschiedenis</h2><table><thead><tr><th>Tijdstip</th><th>Naam</th><th>Data</th></tr></thead><tbody id="db-body"></tbody></table></div></div>
 
-            <!-- TAB: DATABASE -->
-            <div id="tab-db" class="tab-content">
-                <div class="card">
-                    <h2>Mijn Persoonlijke Geschiedenis</h2>
-                    <table>
-                        <thead><tr><th>Tijdstip</th><th>Naam</th><th>Data</th></tr></thead>
-                        <tbody id="db-body"></tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- TAB: INSTELLINGEN -->
-            <div id="tab-settings" class="tab-content">
-                <div class="card">
-                    <h2>Configuratie</h2>
-                    <p>Stel hier je persoonlijke ntfy-kanaal in (gebruik ditzelfde kanaal op je GSM):</p>
-                    <input type="text" id="ntfy-input" placeholder="bijv. navaro_scanner_99">
-                    <br>
-                    <button class="btn btn-primary" onclick="saveSettings()">KANAAL OPSLAAN</button>
-                </div>
-            </div>
+        <div id="tab-addons" class="tab-content">
+            <div class="card"><div style="display:flex;justify-content:space-between;align-items:center;gap:15px;flex-wrap:wrap"><div><h2 style="margin:0">🧩 Add-ons</h2><p class="muted">Importeer een <b>.ndnfcaddon</b>-bestand en configureer je NFC-extensies.</p></div><button class="btn btn-primary" onclick="document.getElementById('addon-file').click()">＋ Add-on importeren</button><input id="addon-file" type="file" accept=".ndnfcaddon" style="display:none" onchange="importAddon(this)"></div></div>
+            <div id="addon-status" class="status" style="display:none"></div>
+            <div id="addon-grid" class="addon-grid"></div>
+            <div class="card" style="margin-top:20px"><h3>Hoe importeer ik een add-on?</h3><p class="muted">Klik op <b>Add-on importeren</b> en selecteer bijvoorbeeld <b>EmailAddon.ndnfcaddon</b> of <b>DiscordAddon.ndnfcaddon</b>. De add-on wordt lokaal opgeslagen in je NFC Master gebruikersmap.</p></div>
         </div>
+
+        <div id="tab-settings" class="tab-content"><div class="card"><h2>Configuratie</h2><p>Stel hier je persoonlijke ntfy-kanaal in (gebruik ditzelfde kanaal op je GSM):</p><input type="text" id="ntfy-input" placeholder="bijv. navaro_scanner_99"><button class="btn btn-primary" onclick="saveSettings()">KANAAL OPSLAAN</button></div></div>
     </div>
+</div>
 
-    <script>
-        const { createClient } = require('@supabase/supabase-js');
-        const QRCode = require('qrcode');
+<div id="addon-modal" class="modal"><div class="modal-card"><div class="modal-head"><h2 id="modal-title">Add-on configureren</h2><button class="close" onclick="closeAddonModal()">×</button></div><div id="modal-body"></div></div></div>
 
-        // SUPABASE CONFIG
-        const SUPABASE_URL = 'https://eddnqlqwfzowbjffiugs.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_9mZpcTIXUw-WTR_QxTi4XQ_WsdwUSqs'; 
-        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+<script>
+const { createClient } = require('@supabase/supabase-js');
+const QRCode = require('qrcode');
+const fs = require('fs'); const path = require('path'); const os = require('os'); const { execFileSync } = require('child_process');
+const SUPABASE_URL='https://eddnqlqwfzowbjffiugs.supabase.co'; const SUPABASE_KEY='sb_publishable_9mZpcTIXUw-WTR_QxTi4XQ_WsdwUSqs';
+const supabase=createClient(SUPABASE_URL,SUPABASE_KEY);
+let isLoginMode=true, ntfySource=null, latestNfcData='';
+const ADDON_ROOT=path.join(process.env.APPDATA || path.join(os.homedir(),'AppData','Roaming'),'NFC Master System','addons');
+const addonSettingsKey=id=>'nfc_master_addon_'+id;
 
-        let isLoginMode = true;
-        let ntfySource = null;
-
-        // 1. AUTH LOGICA
-        function toggleAuthMode() {
-            isLoginMode = !isLoginMode;
-            document.getElementById('log-title').innerText = isLoginMode ? "NFC Master Login" : "NFC Master Registratie";
-            document.getElementById('main-btn').innerText = isLoginMode ? "INLOGGEN" : "REGISTREREN";
-            document.getElementById('toggle-text').innerText = isLoginMode ? "Nog geen account? Registreer hier." : "Al een account? Log hier in.";
-        }
-
-        async function authAction() {
-            const email = document.getElementById('email-in').value;
-            const password = document.getElementById('pass-in').value;
-            
-            if (isLoginMode) {
-                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) alert("Fout: " + error.message);
-                else loginSuccess();
-            } else {
-                const { data, error } = await supabase.auth.signUp({ email, password });
-                if (error) alert("Fout: " + error.message);
-                else alert("Registratie gelukt! Je kunt nu inloggen.");
-            }
-        }
-
-        function loginSuccess() {
-    		// 1. Haal het inlogscherm op
-    		const loginScreen = document.getElementById('login-screen');
-    
-    		// 2. Knal het volledig weg (niet alleen onzichtbaar, maar echt weg)
-    		loginScreen.style.display = 'none';
-    		loginScreen.style.pointerEvents = 'none'; // Zorgt dat je er 'doorheen' kunt klikken
-    
-    		// 3. Toon het dashboard en forceer dat het de bovenste laag wordt
-    		const dashboard = document.getElementById('dashboard');
-    		dashboard.style.display = 'flex';
-    		dashboard.style.position = 'relative';
-    		dashboard.style.zIndex = '1';
-    
-    		// 4. Start de rest
-    		loadSettings();
-    		loadHistory();
-	}
-
-
-        // 2. TAB & SETTINGS LOGICA
-        function showTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.sidebar button').forEach(b => b.classList.remove('active'));
-            document.getElementById('tab-' + tabId).classList.add('active');
-            document.getElementById('btn-' + tabId).classList.add('active');
-        }
-
-        function saveSettings() {
-            const chan = document.getElementById('ntfy-input').value;
-            if (!chan) return alert("Vul een kanaalnaam in!");
-            localStorage.setItem('navaro_chan', chan);
-            alert("Kanaal opgeslagen!");
-            initNtfy(chan);
-        }
-
-        function loadSettings() {
-            const chan = localStorage.getItem('navaro_chan') || "navaro_default";
-            document.getElementById('ntfy-input').value = chan;
-            initNtfy(chan);
-        }
-
-        // 3. NTFY & SCAN LOGICA
-        function initNtfy(channel) {
-            if (ntfySource) ntfySource.close();
-            document.getElementById('display-channel').innerText = channel;
-            
-            // QR Code maken voor de GSM
-            QRCode.toCanvas(document.getElementById('qrcode'), "https://friendly-pixie-81e3aa.netlify.app", { width: 150 });
-
-            ntfySource = new EventSource(`https://ntfy.sh/${channel}/sse`);
-            ntfySource.onmessage = async (e) => {
-                const data = JSON.parse(e.data);
-                if (data.message) {
-                    document.getElementById('raw-data').innerText = data.message;
-                    
-                    let name = "NFC Record";
-                    try { name = JSON.parse(data.message).display_name || "NFC Scan"; } catch(err) {}
-
-                    // Opslaan in Supabase (automatisch gekoppeld aan jouw user_id door de SQL regel)
-                    await supabase.from('history').insert([{ display_name: name, raw_data: data.message }]);
-                    loadHistory();
-                }
-            };
-        }
-
-        async function stuurVerzoek(type) {
-            const chan = localStorage.getItem('navaro_chan') || "navaro_default";
-            const content = document.getElementById('write-text').value;
-            await fetch(`https://ntfy.sh/${chan}_request`, {
-                method: 'POST',
-                body: JSON.stringify({ type, content })
-            });
-            alert("Verzoek verstuurd naar GSM!");
-        }
-
-        // 4. DATABASE WEERGAVE
-        async function loadHistory() {
-            const { data, error } = await supabase.from('history').select('*').order('created_at', { ascending: false });
-            if (data) {
-                document.getElementById('db-body').innerHTML = data.map(h => `
-                    <tr>
-                        <td>${new Date(h.created_at).toLocaleString()}</td>
-                        <td><b>${h.display_name}</b></td>
-                        <td style="color: #666; font-size: 0.8em;">${h.raw_data.substring(0, 50)}...</td>
-                    </tr>
-                `).join('');
-            }
-        }
-    </script>
+function toggleAuthMode(){isLoginMode=!isLoginMode;document.getElementById('log-title').innerText=isLoginMode?'NFC Master Login':'NFC Master Registratie';document.getElementById('main-btn').innerText=isLoginMode?'INLOGGEN':'REGISTREREN';document.getElementById('toggle-text').innerText=isLoginMode?'Nog geen account? Registreer hier.':'Al een account? Log hier in.';}
+async function authAction(){const email=document.getElementById('email-in').value,password=document.getElementById('pass-in').value;if(!email||!password)return alert('Vul email en wachtwoord in.');if(isLoginMode){const {error}=await supabase.auth.signInWithPassword({email,password});if(error)alert('Fout: '+error.message);else loginSuccess();}else{const {error}=await supabase.auth.signUp({email,password});if(error)alert('Fout: '+error.message);else alert('Registratie gelukt! Je kunt nu inloggen.');}}
+function loginSuccess(){document.getElementById('login-screen').style.display='none';document.getElementById('dashboard').style.display='flex';loadSettings();loadHistory();renderAddons();}
+function showTab(id){document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));document.querySelectorAll('.sidebar button').forEach(b=>b.classList.remove('active'));document.getElementById('tab-'+id).classList.add('active');document.getElementById('btn-'+id).classList.add('active');if(id==='addons')renderAddons();}
+function saveSettings(){const chan=document.getElementById('ntfy-input').value.trim();if(!chan)return alert('Vul een kanaalnaam in!');localStorage.setItem('navaro_chan',chan);alert('Kanaal opgeslagen!');initNtfy(chan);}
+function loadSettings(){const chan=localStorage.getItem('navaro_chan')||'navaro_default';document.getElementById('ntfy-input').value=chan;initNtfy(chan);}
+function initNtfy(channel){if(ntfySource)ntfySource.close();document.getElementById('display-channel').innerText=channel;QRCode.toCanvas(document.getElementById('qrcode'),'https://friendly-pixie-81e3aa.netlify.app',{width:150});ntfySource=new EventSource(`https://ntfy.sh/${channel}/sse`);ntfySource.onmessage=async e=>{try{const data=JSON.parse(e.data);if(data.message){latestNfcData=data.message;document.getElementById('raw-data').innerText=data.message;let name='NFC Record';try{name=JSON.parse(data.message).display_name||'NFC Scan';}catch(err){}await supabase.from('history').insert([{display_name:name,raw_data:data.message}]);loadHistory();}}catch(err){console.log(err);}};}
+async function stuurVerzoek(type){const chan=localStorage.getItem('navaro_chan')||'navaro_default';const content=document.getElementById('write-text').value;await fetch(`https://ntfy.sh/${chan}_request`,{method:'POST',body:JSON.stringify({type,content})});alert('Verzoek verstuurd naar GSM!');}
+async function loadHistory(){const {data}=await supabase.from('history').select('*').order('created_at',{ascending:false});if(data)document.getElementById('db-body').innerHTML=data.map(h=>`<tr><td>${new Date(h.created_at).toLocaleString()}</td><td><b>${escapeHtml(h.display_name||'')}</b></td><td style="color:#666;font-size:.8em">${escapeHtml((h.raw_data||'').substring(0,50))}...</td></tr>`).join('');}
+function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function ensureAddonRoot(){fs.mkdirSync(ADDON_ROOT,{recursive:true});}
+function setAddonStatus(text,ok=true){const el=document.getElementById('addon-status');el.style.display='block';el.className='status '+(ok?'ok':'err');el.textContent=text;}
+function safeId(id){return String(id||'addon').replace(/[^a-zA-Z0-9_-]/g,'_').slice(0,80);}
+function findConfig(dir){const entries=fs.readdirSync(dir,{withFileTypes:true});for(const e of entries){const p=path.join(dir,e.name);if(e.isFile()&&e.name.toLowerCase()==='config.json')return p;if(e.isDirectory()){const found=findConfig(p);if(found)return found;}}return null;}
+function importAddon(input){const file=input.files&&input.files[0];input.value='';if(!file)return;if(!file.name.toLowerCase().endsWith('.ndnfcaddon'))return setAddonStatus('Ongeldig bestand. Kies een .ndnfcaddon-bestand.',false);try{ensureAddonRoot();const temp=fs.mkdtempSync(path.join(os.tmpdir(),'nfc-addon-'));const zipPath=path.join(temp,file.name);fs.copyFileSync(file.path,zipPath);const ps=p=>"'"+String(p).replace(/'/g,"''")+"'";execFileSync('powershell.exe',['-NoProfile','-Command',`Expand-Archive -LiteralPath ${ps(zipPath)} -DestinationPath ${ps(temp)} -Force`],{stdio:'pipe'});const configPath=findConfig(temp);if(!configPath)throw new Error('config.json ontbreekt in deze add-on.');const config=JSON.parse(fs.readFileSync(configPath,'utf8'));const id=safeId(config.id||path.basename(file.name,'.ndnfcaddon'));if(!config.name)config.name=id;const dest=path.join(ADDON_ROOT,id);if(fs.existsSync(dest))fs.rmSync(dest,{recursive:true,force:true});fs.mkdirSync(dest,{recursive:true});const sourceRoot=path.dirname(configPath);fs.cpSync(sourceRoot,dest,{recursive:true});fs.writeFileSync(path.join(dest,'config.json'),JSON.stringify(config,null,2));fs.rmSync(temp,{recursive:true,force:true});setAddonStatus(`${config.icon||'🧩'} ${config.name} ${config.version||''} is geïmporteerd.`);renderAddons();}catch(err){console.error(err);setAddonStatus('Add-on importeren mislukt: '+err.message,false);}}
+function getInstalledAddons(){ensureAddonRoot();return fs.readdirSync(ADDON_ROOT,{withFileTypes:true}).filter(e=>e.isDirectory()).map(e=>{const dir=path.join(ADDON_ROOT,e.name),cfg=path.join(dir,'config.json');try{return {...JSON.parse(fs.readFileSync(cfg,'utf8')),__dir:dir};}catch(err){return null;}}).filter(Boolean);}
+function getAddonSettings(addon){try{return JSON.parse(localStorage.getItem(addonSettingsKey(addon.id)))||{};}catch(e){return {};}}
+function saveAddonSettings(addon,settings){localStorage.setItem(addonSettingsKey(addon.id),JSON.stringify(settings));}
+function renderAddons(){const grid=document.getElementById('addon-grid');if(!grid)return;const addons=getInstalledAddons();if(!addons.length){grid.innerHTML='<div class="card" style="grid-column:1/-1"><h3>Nog geen add-ons geïnstalleerd</h3><p class="muted">Importeer een .ndnfcaddon-bestand om hier een add-on te zien.</p></div>';return;}grid.innerHTML=addons.map(a=>`<div class="addon-card"><div class="addon-icon">${escapeHtml(a.icon||'🧩')}</div><div class="addon-title">${escapeHtml(a.name)}</div><p class="muted">${escapeHtml(a.description||'Geen beschrijving.')}</p><p class="muted">Versie ${escapeHtml(a.version||'-')}</p><div class="toolbar"><button class="btn btn-primary" onclick="configureAddon('${escapeHtml(a.id)}')">⚙ Configureren</button><button class="btn btn-secondary" onclick="removeAddon('${escapeHtml(a.id)}')">Verwijderen</button></div></div>`).join('');}
+function findAddon(id){return getInstalledAddons().find(a=>a.id===id);}
+function configureAddon(id){const addon=findAddon(id);if(!addon)return;document.getElementById('modal-title').textContent=`${addon.icon||'🧩'} ${addon.name}`;const s={...(addon.settings||{}),...getAddonSettings(addon)};let html='';if(id==='email'){html=`<p class="muted">Gebruik NFC-data om een e-mail op te stellen. Er worden geen SMTP-wachtwoorden opgeslagen.</p><label>Ontvanger</label><input id="cfg-recipient" type="email" value="${escapeHtml(s.recipient||'')}" placeholder="naam@voorbeeld.be"><label>Onderwerp</label><input id="cfg-subject" value="${escapeHtml(s.subject||'NFC Master - NFC data')}"><label>Voorvoegsel bericht</label><textarea id="cfg-bodyPrefix">${escapeHtml(s.bodyPrefix||'NFC scan ontvangen:\n\n')}</textarea><div class="toolbar"><button class="btn btn-primary" onclick="saveEmailAddon('${escapeHtml(id)}')">Opslaan</button><button class="btn btn-success" onclick="sendEmailFromLastScan('${escapeHtml(id)}')">📧 E-mail laatste scan</button></div><div id="addon-action-status" class="status"></div>`;}else if(id==='discord'){html=`<p class="muted">Stuur de laatste NFC-scan naar Discord via een webhook. Bewaar je webhook privé.</p><label>Discord webhook URL</label><input id="cfg-webhook" type="url" value="${escapeHtml(s.webhookUrl||'')}" placeholder="https://discord.com/api/webhooks/..."><label>Gebruikersnaam</label><input id="cfg-username" value="${escapeHtml(s.username||'NFC Master')}"><label>Bericht voorvoegsel</label><input id="cfg-prefix" value="${escapeHtml(s.contentPrefix||'📡 NFC scan ontvangen:')}"><div class="toolbar"><button class="btn btn-primary" onclick="saveDiscordAddon('${escapeHtml(id)}')">Opslaan</button><button class="btn btn-success" onclick="sendDiscordFromLastScan('${escapeHtml(id)}')">💬 Naar Discord sturen</button></div><div id="addon-action-status" class="status"></div>`;}else{html=`<p class="muted">Deze add-on is geïnstalleerd, maar heeft nog geen ingebouwde configuratiepagina.</p><button class="btn btn-secondary" onclick="openAddonEntry('${escapeHtml(id)}')">Open add-on</button>`;}document.getElementById('modal-body').innerHTML=html;document.getElementById('addon-modal').classList.add('show');}
+function closeAddonModal(){document.getElementById('addon-modal').classList.remove('show');}
+function saveEmailAddon(id){const a=findAddon(id);saveAddonSettings(a,{recipient:document.getElementById('cfg-recipient').value.trim(),subject:document.getElementById('cfg-subject').value,bodyPrefix:document.getElementById('cfg-bodyPrefix').value});showActionStatus('E-mail instellingen opgeslagen.');}
+function saveDiscordAddon(id){const a=findAddon(id);const url=document.getElementById('cfg-webhook').value.trim();if(url&&!/^https:\/\/discord(?:app)?\.com\/api\/webhooks\//i.test(url))return showActionStatus('Ongeldige Discord webhook URL.',false);saveAddonSettings(a,{webhookUrl:url,username:document.getElementById('cfg-username').value,contentPrefix:document.getElementById('cfg-prefix').value});showActionStatus('Discord instellingen opgeslagen.');}
+function showActionStatus(text,ok=true){const e=document.getElementById('addon-action-status');if(e){e.textContent=text;e.className='status '+(ok?'ok':'err');}}
+function sendEmailFromLastScan(id){const a=findAddon(id),s={...(a.settings||{}),...getAddonSettings(a)};if(!s.recipient)return showActionStatus('Vul eerst een ontvanger in.',false);const body=(s.bodyPrefix||'')+(latestNfcData||document.getElementById('raw-data').innerText||'');location.href='mailto:'+encodeURIComponent(s.recipient)+'?subject='+encodeURIComponent(s.subject||'NFC Master - NFC data')+'&body='+encodeURIComponent(body);showActionStatus('Je standaard e-mailprogramma wordt geopend.');}
+async function sendDiscordFromLastScan(id){const a=findAddon(id),s={...(a.settings||{}),...getAddonSettings(a)};if(!s.webhookUrl)return showActionStatus('Vul eerst een Discord webhook URL in.',false);const content=(s.contentPrefix||'📡 NFC scan ontvangen:')+'\n'+(latestNfcData||document.getElementById('raw-data').innerText||'');try{const res=await fetch(s.webhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content,username:s.username||'NFC Master'})});if(!res.ok)throw new Error('Discord gaf HTTP '+res.status);showActionStatus('NFC-scan naar Discord gestuurd.');}catch(e){showActionStatus('Discord verzenden mislukt: '+e.message,false);}}
+function openAddonEntry(id){const a=findAddon(id);if(!a)return;const entry=a.entry||'view.html';const p=path.join(a.__dir,entry);if(fs.existsSync(p)){const {shell}=require('electron');shell.openPath(p);}else showActionStatus('Entry-bestand niet gevonden.',false);}
+function removeAddon(id){const a=findAddon(id);if(!a)return;if(!confirm(`Add-on ${a.name} verwijderen?`))return;fs.rmSync(a.__dir,{recursive:true,force:true});localStorage.removeItem(addonSettingsKey(a.id));renderAddons();setAddonStatus(`${a.name} is verwijderd.`);}
+</script>
 </body>
 </html>

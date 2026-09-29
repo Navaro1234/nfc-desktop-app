@@ -37,13 +37,6 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "NFC Master System"
-    },
-    "publish": [
-      {
-        "provider": "github",
-        "owner": "navaro1234",
-        "repo": "nfc-desktop-app"
-      }
-    ]
+    }
   }
 }

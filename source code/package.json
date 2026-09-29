@@ -1,6 +1,6 @@
 {
   "name": "nfc-desktop-app",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "NFC Cloud Dashboard Pro",
   "main": "main.js",
   "scripts": {
@@ -20,17 +20,9 @@
   "build": {
     "appId": "com.navaro.nfcpro",
     "productName": "NFC Master System",
-    "directories": {
-      "output": "dist"
-    },
-    "files": [
-      "**/*",
-      "!dist/**"
-    ],
-    "win": {
-      "target": "nsis",
-      "icon": "icon.ico"
-    },
+    "directories": { "output": "dist" },
+    "files": ["**/*", "!dist/**"],
+    "win": { "target": "nsis", "icon": "icon.ico" },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,

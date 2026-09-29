@@ -1,11 +1,11 @@
 {
   "name": "nfc-desktop-app",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "NFC Cloud Dashboard Pro",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist": "electron-builder"
+    "dist": "electron-builder --win nsis"
   },
   "author": "Navaro",
   "dependencies": {
@@ -20,9 +20,23 @@
   "build": {
     "appId": "com.navaro.nfcpro",
     "productName": "NFC Master System",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "**/*",
+      "!dist/**"
+    ],
     "win": {
       "target": "nsis",
       "icon": "icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "NFC Master System"
     },
     "publish": [
       {
